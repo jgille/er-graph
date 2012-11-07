@@ -60,13 +60,13 @@ get_neighbors(no_such_node) ->
 get_neighbors(Pid) ->
     Neighbors = node:get_neighbors(Pid),
     Cur = cursor:start(Neighbors),
-    cursor:map(Cur, fun(X) -> node:get(X) end).
+    cursor:map(Cur, fun node:get/1).
 
 add_neighbor(Pid, Start, End) ->
-   mod_neighbors(Pid, Start, End, fun(S, E) -> node:add_neighbor(S, E) end).
+    mod_neighbors(Pid, Start, End, fun node:add_neighbor/2).
 
 rm_neighbor(Pid, Start, End) ->
-   mod_neighbors(Pid, Start, End, fun(S, E) -> node:rm_neighbor(S, E) end).
+   mod_neighbors(Pid, Start, End, fun node:rm_neighbor/2).
 
 mod_neighbors(Pid, Start, End, F) ->
     S = get_pid(Pid, Start),
