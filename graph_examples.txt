@@ -17,9 +17,9 @@ Cur = graph:get_neighbors(G, 1).
 cursor:as_list(Cur).
 %
 % Apply a function for each neighbor.
-cursor:for_each(Cur, fun(Node) -> io:format("Name = ~p~n", [node:find_property(Node, "Name")]) end).
+cursor:for_each(fun(Node) -> io:format("Name = ~p~n", [node:find_property(Node, "Name")]) end, Cur).
 %
 % Filter the neighbors
-Filtered = cursor:filter(Cur, fun(Node) -> node:find_property(Node, "Name") == {ok, "Baz"} end).
+Filtered = cursor:filter(fun(Node) -> node:find_property(Node, "Name") == {ok, "Baz"} end, Cur).
 cursor:as_list(Filtered).
-cursor:for_each(Filtered, fun(Node) -> io:format("Name = ~p~n", [node:find_property(Node, "Name")]) end).
+cursor:for_each(fun(Node) -> io:format("Name = ~p~n", [node:find_property(Node, "Name")]) end, Filtered).
