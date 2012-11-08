@@ -8,19 +8,14 @@
 %%% Created : 19 Oct 2012 by Jon Ivmark <jon@omega.avail.net>
 
 -module(graph_server).
--export([start/1, start/2, start_link/1, start_link/2, call/2, run/2, reply/2]).
+-export([start_link/1, start_link/2, call/2, run/2, reply/2]).
 
 -define(TIMEOUT, 5000).
 
 %%% Public API
-start(Module) ->
-    spawn(fun() -> init(Module) end).
 
 start_link(Module) ->
     spawn_link(fun() -> init(Module) end).
-
-start(Module, InitialVal) ->
-    spawn(fun() -> init(Module, InitialVal) end).
 
 start_link(Module, InitialVal) ->
     spawn_link(fun() -> init(Module, InitialVal) end).

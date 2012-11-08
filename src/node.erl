@@ -9,22 +9,21 @@
 
 -module(node).
 
--export([start/1, start_link/1, get/1, set_props/2, get_neighbors/1, add_neighbor/2, rm_neighbor/2, find_property/2, quit/1]).
+-export([start_link/1, get/1, find_property/2, set_properties/2]).
+-export([get_neighbors/1, add_neighbor/2, rm_neighbor/2, stop/1]).
 -export([call/3, run/2, init/1]).
 
 -include("graph.hrl").
 
 %%% Client API
 
-start(Id) -> graph_server:start(?MODULE, Id).
-
 start_link(Id) -> graph_server:start_link(?MODULE, Id).
 
 get(Pid) ->
     graph_server:call(Pid, get).
 
-set_props(Pid, Props) ->
-    graph_server:call(Pid, {set_props, orddict:from_list(Props)}).
+set_properties(Pid, Props) ->
+    graph_server:call(Pid, {set_properties, orddict:from_list(Props)}).
 
 get_neighbors(Pid) ->
     graph_server:call(Pid, get_neighbors).
@@ -39,8 +38,8 @@ find_property(Node, Key) ->
     Props = Node#node.props,
     orddict:find(Key, Props).
 
-quit(Pid) ->
-    graph_server:call(Pid, quit).
+stop(Pid) ->
+    graph_server:call(Pid, stop).
 
 %%% Server functions
 
@@ -48,7 +47,7 @@ call(get, Caller, Node) ->
     graph_server:reply(Caller, as_node(Node)),
     Node;
 
-call({set_props, Props}, Caller, Node) ->
+call({set_properties, Props}, Caller, Node) ->
     NewNode = Node#graph_node{props=Props},
     graph_server:reply(Caller, as_node(NewNode)),
     NewNode;
@@ -68,7 +67,7 @@ call({rm_neighbor, Neighbor}, Caller, Node) ->
     graph_server:reply(Caller, as_node(NewNode)),
     NewNode;
 
-call(quit, Caller, _) ->
+call(stop, Caller, _) ->
     graph_server:reply(Caller, ok),
     exit(normal).
 

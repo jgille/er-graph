@@ -23,3 +23,6 @@ cursor:for_each(fun(Node) -> io:format("Name = ~p~n", [node:find_property(Node, 
 Filtered = cursor:filter(fun(Node) -> node:find_property(Node, "Name") == {ok, "Baz"} end, Cur).
 cursor:as_list(Filtered).
 cursor:for_each(fun(Node) -> io:format("Name = ~p~n", [node:find_property(Node, "Name")]) end, Filtered).
+%
+% Stop the graph and all it's node processes
+graph:stop(G).
