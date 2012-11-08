@@ -15,10 +15,10 @@
 start(Xs) ->
     {Xs, []}.
 
-filter({Xs, PipeLine}, F) ->
-    {Xs, [{filter, F}|PipeLine]}.
+filter(P, {Xs, PipeLine}) ->
+    {Xs, [{filter, P}|PipeLine]}.
 
-map({Xs, PipeLine}, F) ->
+map(F, {Xs, PipeLine}) ->
     {Xs, [{map, F}|PipeLine]}.
 
 cursor({Xs, PipeLine}) ->
@@ -37,11 +37,11 @@ as_list(Cur) ->
 as_list(Cur, N) ->
     as_list(Cur, [], N).
 
-as_list(_, Res, 0) ->
-    lists:reverse(Res);
 as_list({Xs, PipeLine}, Res, N) ->
     rec_as_list({Xs, lists:reverse(PipeLine)}, Res, N).
 
+rec_as_list(_, Res, 0) ->
+    lists:reverse(Res);
 rec_as_list({Xs, PipeLine}, Res, N) ->
     C = cursor({Xs, PipeLine}),
     Next = C(),
@@ -50,21 +50,21 @@ rec_as_list({Xs, PipeLine}, Res, N) ->
         {E, NextCur} -> rec_as_list(NextCur, [E|Res], N - 1)
     end.
 
-for_each(Cur, F) ->
-    for_each(Cur, F, -1).
+for_each(F, Cur) ->
+    for_each(F, Cur, -1).
 
-for_each(_, _, 0) ->
+for_each(F, {Xs, PipeLine}, N) ->
+    rec_for_each(F, {Xs, lists:reverse(PipeLine)}, N).
+
+rec_for_each(_, _, 0) ->
     ok;
-for_each({Xs, PipeLine}, F, N) ->
-    rec_for_each({Xs, lists:reverse(PipeLine)}, F, N).
-
-rec_for_each({Xs, PipeLine}, F, N) ->
+rec_for_each(F, {Xs, PipeLine}, N) ->
     C = cursor({Xs, PipeLine}),
     Next = C(),
     case Next of
         done -> ok;
         {E, NextCur} -> F(E),
-                        rec_for_each(NextCur, F, N - 1)
+                        rec_for_each(F, NextCur, N - 1)
     end.
 
 step(Xs, []) ->
@@ -74,16 +74,15 @@ step([], _) ->
 step([filtered|T], _) ->
     [filtered|T];
 step([H|T], [Instr|Rem]) ->
-    step([apply_map(Instr, H)|T], Rem).
+    step([do_map(Instr, H)|T], Rem).
 
-
-apply_map({filter, F}, X) ->
-    B = F(X),
+do_map({filter, P}, X) ->
+    B = P(X),
     case B of
         true -> X;
         _ -> filtered
     end;
-apply_map({map, F}, X) ->
+do_map({map, F}, X) ->
     F(X).
 
 

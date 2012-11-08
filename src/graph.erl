@@ -60,7 +60,7 @@ get_neighbors(no_such_node) ->
 get_neighbors(Pid) ->
     Neighbors = node:get_neighbors(Pid),
     Cur = cursor:start(Neighbors),
-    cursor:map(Cur, fun node:get/1).
+    cursor:map(fun node:get/1, Cur).
 
 add_neighbor(Pid, Start, End) ->
     mod_neighbors(Pid, Start, End, fun node:add_neighbor/2).
