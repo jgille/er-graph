@@ -1,0 +1,42 @@
+A simple graph written in erlang.
+
+Usage
+===============================================================================================
+
+% Create a graph %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+G = graph:start_link().
+register(my_graph, G).
+
+% Add some nodes %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Foo = graph:add(my_graph, 1, [{"Name", "Foo"}, {"Age", 32}]).
+Bar = graph:add(my_graph, 2, [{"Name", "Bar"}, {"Age", 40}]).
+Baz = graph:add(my_graph, 3, [{"Name", "Baz"}, {"Age", 25}]).
+
+% Add neigbors %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+graph:add_neighbor(my_graph, 1, 2).
+graph:add_neighbor(my_graph, 1, 3).
+
+% Get a cursor of the neighbors of node 1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Cur = graph:get_neighbors(my_graph, 1).
+
+% Get all neighbors as a list %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+cursor:as_list(Cur).
+
+% Apply a function for each neighbor. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+cursor:for_each(fun(Node) -> io:format("Name = ~p~n", [node:find_property(Node, "Name")]) end, Cur).
+
+% Filter the neighbors %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Filtered = cursor:filter(fun(Node) -> node:find_property(Node, "Name") == {ok, "Baz"} end, Cur).
+cursor:as_list(Filtered).
+cursor:for_each(fun(Node) -> io:format("Name = ~p~n", [node:find_property(Node, "Name")]) end, Filtered).
+
+% Stop the graph and all it's node processes %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+graph:stop(my_graph).
