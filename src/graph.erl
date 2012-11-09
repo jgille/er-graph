@@ -128,7 +128,6 @@ set_properties(Pid, Properties) ->
 
 mkNode(Id) ->
     Node = node:start_link(Id),
-    io:format("~p~n", [Node]),
     Node.
 
 get_neighbors(no_such_node) ->

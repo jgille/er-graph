@@ -13,15 +13,12 @@ true
 3> % Add some nodes %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 3>
 3> Foo = graph:add(my_graph, 1, [{"Name", "Foo"}, {"Age", 32}]).
-<0.37.0>
 {node,1,[{"Age",32},{"Name","Foo"}]}
 4>
 4> Bar = graph:add(my_graph, 2, [{"Name", "Bar"}, {"Age", 40}]).
-<0.39.0>
 {node,2,[{"Age",40},{"Name","Bar"}]}
 5>
 5> Baz = graph:add(my_graph, 3, [{"Name", "Baz"}, {"Age", 25}]).
-<0.41.0>
 {node,3,[{"Age",25},{"Name","Baz"}]}
 6>
 6> % Add neigbors %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
