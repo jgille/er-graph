@@ -3,7 +3,7 @@
 %%% @copyright (C) 2012, Jon Ivmark
 %%% @doc
 %%%
-%%% A module providing lazy and chained mapping and filtering of lists.
+%%% A module providing lazy manipulation of lists.
 %%%
 %%% @end
 %%% Created : 27 Oct 2012 by Jon Ivmark <jon@omega.avail.net>
