@@ -2,7 +2,8 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--import(cursor, [start/1, as_list/1, as_list/2, for_each/2, for_each/3, filter/2, map/2]).
+-import(cursor, [from_list/1, as_list/1, as_list/2, for_each/2, for_each/3,
+                 filter/2, map/2, reduce/3, reduce/4, count/1, reverse/1]).
 
 as_list_test_() ->
     [fun() -> test_as_list([]) end,
@@ -21,12 +22,21 @@ filter_test_() ->
      fun() -> test_filter([1, 2, 3, 4, 1], Filter) end,
      fun() -> test_filter(['A', 2, 3, 4, 1], Filter) end].
 
+reduce_test_() ->
+    Accumulator = fun(X, Y) -> Y + X end,
+    [fun() -> test_reduce([], Accumulator, 0) end,
+     fun() -> test_reduce([1, 2], Accumulator, 0) end,
+     fun() -> test_reduce([1, 2, 3, 4, 1], Accumulator, 0) end,
+     fun() -> test_reduce([], Accumulator, 0, 3) end,
+     fun() -> test_reduce([1, 2], Accumulator, 0, 3) end,
+     fun() -> test_reduce([1, 2, 3, 4, 1], Accumulator, 0, 3) end].
+
 map_test_() ->
     Map = fun(X) -> X * 2 end,
     [fun() -> test_map([], Map) end,
      fun() -> test_map([1, 2], Map) end,
      fun() -> test_map([1, 2, 3, 4, 1], Map) end,
-     fun() -> ?assertError(badarith, as_list(map(Map, start(['A', 1])))) end].
+     fun() -> ?assertError(badarith, as_list(map(Map, from_list(['A', 1])))) end].
 
 filter_map_test_() ->
     Filter = fun(X) -> X > 2 end,
@@ -43,37 +53,57 @@ map_filter_test_() ->
 for_each_test_() ->
     Filter = fun(X) -> X > 2 end,
     Map = fun(X) -> X * 2 end,
-    [fun() -> test_for_each(start([])) end,
-     fun() -> test_for_each(start([1, 2, 3])) end,
-     fun() -> test_for_each(filter(Filter, start([1, 2, 3]))) end,
-     fun() -> test_for_each(map(Map, start([1, 2, 3]))) end,
-     fun() -> test_for_each(start([]), 2) end,
-     fun() -> test_for_each(start([1, 2, 3]), 2) end,
-     fun() -> test_for_each(filter(Filter, start([1, 2, 3])), 2) end,
-     fun() -> test_for_each(map(Map, start([1, 2, 3])), 2) end].
+    [fun() -> test_for_each(from_list([])) end,
+     fun() -> test_for_each(from_list([1, 2, 3])) end,
+     fun() -> test_for_each(filter(Filter, from_list([1, 2, 3]))) end,
+     fun() -> test_for_each(map(Map, from_list([1, 2, 3]))) end,
+     fun() -> test_for_each(filter(Filter, map(Map, from_list([1, 2, 3])))) end,
+     fun() -> test_for_each(from_list([]), 2) end,
+     fun() -> test_for_each(from_list([1, 2, 3]), 2) end,
+     fun() -> test_for_each(filter(Filter, from_list([1, 2, 3])), 2) end,
+     fun() -> test_for_each(map(Map, from_list([1, 2, 3])), 2) end].
+
+count_test_() ->
+    Filter = fun(X) -> X > 2 end,
+    [fun() -> test_count(from_list([])) end,
+     fun() -> test_count(filter(Filter, from_list([1, 2, 3]))) end].
+
+reverse_test_() ->
+    Filter = fun(X) -> X > 1 end,
+    [fun() -> test_reverse(from_list([])) end,
+     fun() -> test_reverse(from_list([1, 2, 3])) end,
+     fun() -> test_reverse(filter(Filter, from_list([1, 2, 3]))) end].
 
 test_as_list(Xs) ->
-    Xs1 = as_list(start(Xs)),
+    Xs1 = as_list(from_list(Xs)),
     ?assertEqual(Xs, Xs1).
 
 test_as_list(Xs, Limit) ->
-    Xs1 = as_list(start(Xs), Limit),
+    Xs1 = as_list(from_list(Xs), Limit),
     ?assertEqual(lists:sublist(Xs, Limit), Xs1).
 
 test_filter(Xs, P) ->
-    Xs1 = as_list(filter(P, start(Xs))),
+    Xs1 = as_list(filter(P, from_list(Xs))),
     ?assertEqual(lists:filter(P, Xs), Xs1).
 
+test_reduce(Xs, Acc, Initial) ->
+    Res = reduce(Acc, from_list(Xs), Initial),
+    ?assertEqual(lists:foldl(Acc, Initial, Xs), Res).
+
+test_reduce(Xs, Acc, Initial, Limit) ->
+    Res = reduce(Acc, from_list(Xs), Initial, Limit),
+    ?assertEqual(lists:foldl(Acc, Initial, lists:sublist(Xs, Limit)), Res).
+
 test_map(Xs, F) ->
-    Xs1 = as_list(map(F, start(Xs))),
+    Xs1 = as_list(map(F, from_list(Xs))),
     ?assertEqual(lists:map(F, Xs), Xs1).
 
 test_filter_map(Xs, P, F) ->
-    Xs1 = as_list(map(F, filter(P, start(Xs)))),
+    Xs1 = as_list(map(F, filter(P, from_list(Xs)))),
     ?assertEqual(lists:map(F, lists:filter(P, Xs)), Xs1).
 
 test_map_filter(Xs, F, P) ->
-    Xs1 = as_list(filter(P, map(F, start(Xs)))),
+    Xs1 = as_list(filter(P, map(F, from_list(Xs)))),
     ?assertEqual(lists:filter(P, lists:map(F, Xs)), Xs1).
 
 test_for_each(Cur) ->
@@ -89,6 +119,12 @@ test_for_each(Cur, N) ->
     Expected = lists:map(fun(X) -> {self(), {Mod, mock_me, [X]}, ok} end, Xs),
     meck:unload(Mod),
     ?assertEqual(Expected, Performed).
+
+test_count(Cur) ->
+    ?assertEqual(length(as_list(Cur)), count(Cur)).
+
+test_reverse(Cur) ->
+    ?assertEqual(lists:reverse(as_list(Cur)), as_list(reverse(Cur))).
 
 fe(F, Cur, -1) ->
     for_each(F, Cur);

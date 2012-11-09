@@ -134,7 +134,7 @@ get_neighbors(no_such_node) ->
     no_such_node();
 get_neighbors(Pid) ->
     Neighbors = node:get_neighbors(Pid),
-    Cur = cursor:start(Neighbors),
+    Cur = cursor:from_list(Neighbors),
     cursor:map(fun node:get/1, Cur).
 
 mod_neighbors(Pid, Start, End, F) ->

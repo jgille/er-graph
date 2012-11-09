@@ -10,9 +10,13 @@
 %%%-------------------------------------------------------------------
 -module(cursor).
 
--export([as_list/1, as_list/2, for_each/2, for_each/3, start/1, filter/2, map/2]).
+-export([from_list/1]).
+-export([filter/2, map/2, reverse/1]).
+-export([as_list/1, as_list/2, for_each/2, for_each/3, reduce/3, reduce/4, count/1]).
 
-start(Xs) ->
+%%% API functions
+
+from_list(Xs) ->
     {Xs, []}.
 
 filter(P, {Xs, PipeLine}) ->
@@ -21,68 +25,70 @@ filter(P, {Xs, PipeLine}) ->
 map(F, {Xs, PipeLine}) ->
     {Xs, [{map, F}|PipeLine]}.
 
+as_list(Cur) ->
+    as_list(Cur, -1).
+
+as_list(Cursor, N) ->
+    Result = reduce(fun(Xs, X) -> [X|Xs] end,
+                    Cursor, [], N),
+    lists:reverse(Result).
+
+for_each(F, Cur) ->
+    for_each(F, Cur, -1).
+
+for_each(F, Cursor, N) ->
+    reduce(fun(ok, Head) -> F(Head),
+                            ok end,
+           Cursor, ok, N).
+
+reduce(F, Cur, Initial) ->
+    reduce(F, Cur, Initial, -1).
+
+reduce(Accumulator, {Xs, PipeLine}, Initial, N) ->
+    recursive_reduce({Xs, lists:reverse(PipeLine)}, Initial, Accumulator, N).
+
+count(Cur) ->
+    reduce(fun(Cnt, _Any) -> Cnt + 1 end, Cur, 0).
+
+reverse({Xs, PipeLine}) ->
+    {lists:reverse(Xs), PipeLine}.
+
+% Private helper functions
+
 cursor({Xs, PipeLine}) ->
     fun() -> next(Xs, PipeLine) end.
 
 next(Xs, PipeLine) ->
-    Next = step(Xs, PipeLine),
-    case Next of
+    case map_first(Xs, PipeLine) of
         [] -> done;
         [filtered|T] -> next(T, PipeLine);
         [H|T] -> {H, {T, PipeLine}}
     end.
 
-as_list(Cur) ->
-    as_list(Cur, -1).
-as_list(Cur, N) ->
-    as_list(Cur, [], N).
-
-as_list({Xs, PipeLine}, Res, N) ->
-    rec_as_list({Xs, lists:reverse(PipeLine)}, Res, N).
-
-rec_as_list(_, Res, 0) ->
-    lists:reverse(Res);
-rec_as_list({Xs, PipeLine}, Res, N) ->
-    C = cursor({Xs, PipeLine}),
-    Next = C(),
-    case Next of
-        done -> lists:reverse(Res);
-        {E, NextCur} -> rec_as_list(NextCur, [E|Res], N - 1)
-    end.
-
-for_each(F, Cur) ->
-    for_each(F, Cur, -1).
-
-for_each(F, {Xs, PipeLine}, N) ->
-    rec_for_each(F, {Xs, lists:reverse(PipeLine)}, N).
-
-rec_for_each(_, _, 0) ->
-    ok;
-rec_for_each(F, {Xs, PipeLine}, N) ->
-    C = cursor({Xs, PipeLine}),
-    Next = C(),
-    case Next of
-        done -> ok;
-        {E, NextCur} -> F(E),
-                        rec_for_each(F, NextCur, N - 1)
-    end.
-
-step(Xs, []) ->
+map_first(Xs, []) ->
     Xs;
-step([], _) ->
+map_first([], _PipeLine) ->
     [];
-step([filtered|T], _) ->
+map_first([filtered|T], _PipeLine) ->
     [filtered|T];
-step([H|T], [Instr|Rem]) ->
-    step([do_map(Instr, H)|T], Rem).
+map_first([H|T], [F|Fs]) ->
+    map_first([map_element(F, H)|T], Fs).
 
-do_map({filter, P}, X) ->
+map_element({filter, P}, X) ->
     B = P(X),
     case B of
         true -> X;
         _ -> filtered
     end;
-do_map({map, F}, X) ->
+map_element({map, F}, X) ->
     F(X).
 
-
+recursive_reduce(_Cursor, Result, _Accumulator, 0) ->
+    Result;
+recursive_reduce({Xs, PipeLine}, Result, Accumulator, N) ->
+    CursorFun = cursor({Xs, PipeLine}),
+    Next = CursorFun(),
+    case Next of
+        done -> Result;
+        {Head, NextCur} -> recursive_reduce(NextCur, Accumulator(Result, Head), Accumulator, N - 1)
+    end.
