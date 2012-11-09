@@ -3,7 +3,7 @@
 -include_lib("eunit/include/eunit.hrl").
 
 -import(cursor, [from_list/1, as_list/1, as_list/2, for_each/2, for_each/3,
-                 filter/2, map/2, reduce/3, reduce/4, count/1, reverse/1]).
+                 filter/2, map/2, reduce/3, reduce/4, count/1, len/1, reverse/1, limit/2]).
 
 as_list_test_() ->
     [fun() -> test_as_list([]) end,
@@ -68,11 +68,23 @@ count_test_() ->
     [fun() -> test_count(from_list([])) end,
      fun() -> test_count(filter(Filter, from_list([1, 2, 3]))) end].
 
+len_test_() ->
+    Filter = fun(X) -> X > 2 end,
+    [fun() -> ?assertEqual(0, len(from_list([]))) end,
+     fun() -> ?assertEqual(3, len(from_list([1, 2, 3]))) end,
+     fun() -> ?assertEqual(3, len(filter(Filter, from_list([1, 2, 3])))) end].
+
 reverse_test_() ->
     Filter = fun(X) -> X > 1 end,
     [fun() -> test_reverse(from_list([])) end,
      fun() -> test_reverse(from_list([1, 2, 3])) end,
      fun() -> test_reverse(filter(Filter, from_list([1, 2, 3]))) end].
+
+limit_test_() ->
+    Filter = fun(X) -> X > 2 end,
+    [fun() -> ?assertEqual([], as_list(limit(2, (from_list([]))))) end,
+     fun() -> ?assertEqual([1, 2], as_list(limit(2, from_list([1, 2, 3])))) end,
+     fun() -> ?assertEqual([], as_list(limit(2, filter(Filter, from_list([1, 2, 3]))))) end].
 
 test_as_list(Xs) ->
     Xs1 = as_list(from_list(Xs)),
