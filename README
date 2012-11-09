@@ -1,10 +1,8 @@
 A simple graph written in erlang.
 
 Usage
-=============================================================================
+================================================================================
 
-1> % Create a graph %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-1>
 1> G = graph:start_link().
 <0.34.0>
 2> register(my_graph, G).
@@ -42,9 +40,9 @@ true
 10>
 10> % Apply a function for each neighbor. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 10>
-10> cursor:for_each(fun(Node) -> io:format("Name = ~p~n", [node:find_property(Node, "Name")]) end, Cur).
-Name = {ok,"Baz"}
-Name = {ok,"Bar"}
+10> cursor:for_each(fun(Node) -> io:format("Node = ~p~n", [Node]) end, Cur).
+Node = {node,3,[{"Age",25},{"Name","Baz"}]}
+Node = {node,2,[{"Age",40},{"Name","Bar"}]}
 ok
 11>
 11> % Filter the neighbors %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -56,12 +54,8 @@ ok
 12> cursor:as_list(Filtered).
 [{node,3,[{"Age",25},{"Name","Baz"}]}]
 13>
-13> cursor:for_each(fun(Node) -> io:format("Name = ~p~n", [node:find_property(Node, "Name")]) end, Filtered).
-Name = {ok,"Baz"}
-ok
-14>
-14> % Stop the graph and all it's node processes %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-14>
-14> graph:stop(my_graph).
+13> % Stop the graph and all it's node processes %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+13>
+13> graph:stop(my_graph).
 Exiting..ok
-15>
+14>

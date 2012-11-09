@@ -27,15 +27,13 @@ cursor:as_list(Cur).
 
 % Apply a function for each neighbor. %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-cursor:for_each(fun(Node) -> io:format("Name = ~p~n", [node:find_property(Node, "Name")]) end, Cur).
+cursor:for_each(fun(Node) -> io:format("Node = ~p~n", [Node]) end, Cur).
 
 % Filter the neighbors %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 Filtered = cursor:filter(fun(Node) -> node:find_property(Node, "Name") == {ok, "Baz"} end, Cur).
 
 cursor:as_list(Filtered).
-
-cursor:for_each(fun(Node) -> io:format("Name = ~p~n", [node:find_property(Node, "Name")]) end, Filtered).
 
 % Stop the graph and all it's node processes %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
