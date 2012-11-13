@@ -4,7 +4,8 @@
 
 -import(cursor, [as_list/1]).
 -import(graph, [add/2, add/3, get/2, rm/2]).
--import(graph, [set_properties/3, add_neighbor/3, get_neighbors/2, rm_neighbor/3]).
+-import(graph, [set_properties/3, add_neighbor/4,
+                get_neighbors/3, rm_neighbor/4]).
 
 start_stop_test_() ->
     {"The graph can be started, stopped and has a registered name",
@@ -24,7 +25,8 @@ add_test_() ->
       fun stop/1,
       fun(_Pid) ->
               [?_assertEqual({node, NodeId1, []}, add(my_graph, NodeId1)),
-               ?_assertEqual({node, NodeId2, Properties2}, add(my_graph, NodeId2, Properties2))]
+               ?_assertEqual({node, NodeId2, Properties2},
+                             add(my_graph, NodeId2, Properties2))]
       end
      }
     }.
@@ -42,7 +44,8 @@ get_test_() ->
       end,
       fun stop/1,
       fun(_Pid) -> [?_assertEqual({node, NodeId1, []}, get(my_graph, NodeId1)),
-                    ?_assertEqual({node, NodeId2, Properties2}, get(my_graph, NodeId2))] end
+                    ?_assertEqual({node, NodeId2, Properties2},
+                                  get(my_graph, NodeId2))] end
      }
     }.
 
@@ -67,22 +70,24 @@ rm_with_neigbors_test_() ->
     {NodeId1, Properties1} = {"Node 1", [{"Age", 30}, {"Name", "Foo"}]},
     {NodeId2, Properties2} = {"Node 2", [{"Age", 50}, {"Name", "Bar"}]},
     {NodeId3, Properties3} = {"Node 3", [{"Age", 40}, {"Name", "Baz"}]},
-    {"We can remove a node from a graph and it is also removed in the corresponding neighbor lists",
+    {"We can remove a node from a graph and it is also " ++
+         "removed in the corresponding neighbor lists",
      {setup,
       fun() ->
               Pid = start(),
               add(my_graph, NodeId1, Properties1),
               add(my_graph, NodeId2, Properties2),
               add(my_graph, NodeId3, Properties3),
-              add_neighbor(my_graph, NodeId1, NodeId2),
-              add_neighbor(my_graph, NodeId1, NodeId3),
+              add_neighbor(my_graph, NodeId1, NodeId2, my_edge_type),
+              add_neighbor(my_graph, NodeId1, NodeId3, my_edge_type),
               Pid
       end,
       fun stop/1,
       fun(_Pid) ->
               rm(my_graph, NodeId2),
               [?_assertEqual([{node, NodeId3, Properties3}],
-                             as_list(get_neighbors(my_graph, NodeId1)))]
+                             as_list(get_neighbors(my_graph, NodeId1,
+                                                   my_edge_type)))]
       end
      }
     }.
@@ -101,7 +106,9 @@ set_properties_test_() ->
               Node =  set_properties(my_graph, NodeId, Properties),
               [?_assertEqual({node, NodeId, Properties}, Node),
                ?_assertEqual({ok, 30}, node:find_property(Node, "Age")),
-               ?_assertEqual(no_such_node, set_properties(my_graph, "I don't exist", Properties))]
+               ?_assertEqual(no_such_node,
+                             set_properties(my_graph, "I don't exist",
+                                            Properties))]
       end
      }
     }.
@@ -119,9 +126,15 @@ add_neighbor_test_() ->
       end,
       fun stop/1,
       fun(_Pid) ->
-              [?_assertEqual({node, NodeId1, Properties1}, add_neighbor(my_graph, NodeId1, NodeId2)),
-               ?_assertEqual(no_such_node, add_neighbor(my_graph, NodeId1, "I don't exist")),
-               ?_assertEqual(no_such_node, add_neighbor(my_graph, "I don't exist", NodeId2))]
+              [?_assertEqual({node, NodeId1, Properties1},
+                             add_neighbor(my_graph, NodeId1, NodeId2,
+                                          my_edge_type)),
+               ?_assertEqual(no_such_node,
+                             add_neighbor(my_graph, NodeId1, "I don't exist",
+                                          my_edge_type)),
+               ?_assertEqual(no_such_node,
+                             add_neighbor(my_graph, "I don't exist", NodeId2,
+                                          my_edge_type))]
       end
      }
     }.
@@ -138,15 +151,23 @@ get_neighbors_test_() ->
               add(my_graph, NodeId1, Properties1),
               add(my_graph, NodeId2, Properties2),
               add(my_graph, NodeId3, Properties3),
-              add_neighbor(my_graph, NodeId1, NodeId2),
-              add_neighbor(my_graph, NodeId1, NodeId3),
+              add_neighbor(my_graph, NodeId1, NodeId2, my_edge_type),
+              add_neighbor(my_graph, NodeId1, NodeId3, my_edge_type),
               Pid
       end,
       fun stop/1,
       fun(_Pid) ->
-              [?_assertEqual([{node, NodeId3, Properties3}, {node, NodeId2, Properties2}],
-                             as_list(get_neighbors(my_graph, NodeId1))),
-               ?_assertEqual(no_such_node, get_neighbors(my_graph, "I don't exist"))]
+              [?_assertEqual([{node, NodeId3, Properties3},
+                              {node, NodeId2, Properties2}],
+                             as_list(get_neighbors(my_graph, NodeId1,
+                                                   my_edge_type))),
+               ?_assertEqual([],
+                             as_list(get_neighbors(my_graph,
+                                                   NodeId1,
+                                                   non_existing_edge_type))),
+               ?_assertEqual(no_such_node,
+                             get_neighbors(my_graph, "I don't exist",
+                                           my_edge_type))]
       end
      }
     }.
@@ -163,17 +184,24 @@ rm_neighbors_test_() ->
               add(my_graph, NodeId1, Properties1),
               add(my_graph, NodeId2, Properties2),
               add(my_graph, NodeId3, Properties3),
-              add_neighbor(my_graph, NodeId1, NodeId2),
-              add_neighbor(my_graph, NodeId1, NodeId3),
+              add_neighbor(my_graph, NodeId1, NodeId2, my_edge_type),
+              add_neighbor(my_graph, NodeId1, NodeId3, my_edge_type),
               Pid
       end,
       fun stop/1,
       fun(_Pid) ->
-              [?_assertEqual({node, NodeId1, Properties1}, rm_neighbor(my_graph, NodeId1, NodeId2)),
+              [?_assertEqual({node, NodeId1, Properties1},
+                             rm_neighbor(my_graph, NodeId1, NodeId2,
+                                         my_edge_type)),
                ?_assertEqual([{node, NodeId3, Properties3}],
-                             as_list(get_neighbors(my_graph, NodeId1))),
-               ?_assertEqual(no_such_node, rm_neighbor(my_graph, "I don't exist", NodeId2)),
-               ?_assertEqual(no_such_node, rm_neighbor(my_graph, NodeId1, "I don't exist"))]
+                             as_list(get_neighbors(my_graph, NodeId1,
+                                                   my_edge_type))),
+               ?_assertEqual(no_such_node,
+                             rm_neighbor(my_graph, "I don't exist", NodeId2,
+                                         my_edge_type)),
+               ?_assertEqual(no_such_node,
+                             rm_neighbor(my_graph, NodeId1, "I don't exist",
+                                         my_edge_type))]
       end
      }
     }.

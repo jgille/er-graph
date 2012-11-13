@@ -12,7 +12,8 @@
 
 -export([from_list/1]).
 -export([filter/2, map/2, reverse/1]).
--export([as_list/1, as_list/2, for_each/2, for_each/3, reduce/3, reduce/4, count/1, len/1, limit/2]).
+-export([as_list/1, as_list/2, for_each/2, for_each/3, reduce/3, reduce/4,
+         count/1, len/1, limit/2]).
 
 %%% API functions
 
@@ -54,13 +55,15 @@ reduce(F, Cur, Initial) ->
 
 % Performs a reduce/foldleft over a limited number of elements in the cursor.
 reduce(Accumulator, {Xs, PipeLine, Limit}, Initial, N) ->
-    recursive_reduce({Xs, lists:reverse(PipeLine), Limit}, Initial, Accumulator, N).
+    recursive_reduce({Xs, lists:reverse(PipeLine), Limit}, Initial,
+                     Accumulator, N).
 
 % Gets the number of elements in the cursor.
 count(Cur) ->
     reduce(fun(Cnt, _Any) -> Cnt + 1 end, Cur, 0).
 
-% Gets the total length of the cursor, disregarding any filters, but taking the limit into account.
+% Gets the total length of the cursor, disregarding any filters,
+% but taking the limit into account.
 len({Xs, _PipeLine, Limit}) ->
     min(Limit, length(Xs)).
 
@@ -68,7 +71,8 @@ len({Xs, _PipeLine, Limit}) ->
 reverse({Xs, PipeLine, Limit}) ->
     {lists:reverse(Xs), PipeLine, Limit}.
 
-% Sets a limit on how many elements that will at most be traversed (including filtered elements).
+% Sets a limit on how many elements that will at most be
+% traversed (including filtered elements).
 limit(NewLimit, {Xs, PipeLine, _PrevLimit}) ->
     {Xs, PipeLine, NewLimit}.
 
@@ -111,5 +115,6 @@ recursive_reduce({Xs, PipeLine, Limit}, Result, Accumulator, N) ->
     Next = CursorFun(),
     case Next of
         done -> Result;
-        {Head, NextCur} -> recursive_reduce(NextCur, Accumulator(Result, Head), Accumulator, N - 1)
+        {Head, NextCur} -> recursive_reduce(NextCur, Accumulator(Result, Head),
+                                            Accumulator, N - 1)
     end.

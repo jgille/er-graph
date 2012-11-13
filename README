@@ -21,16 +21,16 @@ true
 6>
 6> % Add neigbors %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 6>
-6> graph:add_neighbor(my_graph, 1, 2).
+6> graph:add_neighbor(my_graph, 1, 2, friends_with).
 {node,1,[{"Age",32},{"Name","Foo"}]}
 7>
-7> graph:add_neighbor(my_graph, 1, 3).
+7> graph:add_neighbor(my_graph, 1, 3, friends_with).
 {node,1,[{"Age",32},{"Name","Foo"}]}
 8>
 8> % Get a cursor of the neighbors of node 1 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 8>
-8> Cur = graph:get_neighbors(my_graph, 1).
-{[<0.41.0>,<0.39.0>],[{map,#Fun<node.get.1>}]}
+8> Cur = graph:get_neighbors(my_graph, 1, friends_with).
+{[<0.41.0>,<0.39.0>],[{map,#Fun<node.get.1>}],2}
 9>
 9> % Get all neighbors as a list %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 9>
@@ -49,7 +49,8 @@ ok
 11>
 11> Filtered = cursor:filter(fun(Node) -> node:find_property(Node, "Name") == {ok, "Baz"} end, Cur).
 {[<0.41.0>,<0.39.0>],
- [{filter,#Fun<erl_eval.6.82930912>},{map,#Fun<node.get.1>}]}
+ [{filter,#Fun<erl_eval.6.82930912>},{map,#Fun<node.get.1>}],
+ 2}
 12>
 12> cursor:as_list(Filtered).
 [{node,3,[{"Age",25},{"Name","Baz"}]}]

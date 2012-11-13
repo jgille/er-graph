@@ -1,6 +1,6 @@
 -record(graph_node, {id,
                      props=orddict:new(),
-                     neighbors=[]}).
+                     neighbors=orddict:new()}).
 
 -record(node, {id,
                props}).

@@ -11,7 +11,7 @@
 
 %%% Client API
 -export([start_link/0, stop/1]).
--export([get_neighbors/2, add_neighbor/3, rm_neighbor/3]).
+-export([get_neighbors/3, add_neighbor/4, rm_neighbor/4]).
 -export([add/2, add/3, get/2, rm/2]).
 -export([set_properties/3]).
 
@@ -46,15 +46,15 @@ set_properties(Pid, Id, Properties) ->
     Node = get_pid(Pid, Id),
     set_properties(Node, Properties).
 
-get_neighbors(Pid, Id) ->
+get_neighbors(Pid, Id, EdgeType) ->
     Node = get_pid(Pid, Id),
-    get_neighbors(Node).
+    get_neighbors(Node, EdgeType).
 
-add_neighbor(Pid, Start, End) ->
-    mod_neighbors(Pid, Start, End, fun node:add_neighbor/2).
+add_neighbor(Pid, Start, End, EdgeType) ->
+    mod_neighbors(Pid, Start, End, EdgeType, fun node:add_neighbor/3).
 
-rm_neighbor(Pid, Start, End) ->
-   mod_neighbors(Pid, Start, End, fun node:rm_neighbor/2).
+rm_neighbor(Pid, Start, End, EdgeType) ->
+   mod_neighbors(Pid, Start, End, EdgeType, fun node:rm_neighbor/3).
 
 %%% Server functions
 
@@ -130,21 +130,21 @@ mkNode(Id) ->
     Node = node:start_link(Id),
     Node.
 
-get_neighbors(no_such_node) ->
+get_neighbors(no_such_node, _EdgeType) ->
     no_such_node();
-get_neighbors(Pid) ->
-    Neighbors = node:get_neighbors(Pid),
+get_neighbors(Pid, EdgeType) ->
+    Neighbors = node:get_neighbors(Pid, EdgeType),
     Cur = cursor:from_list(Neighbors),
     cursor:map(fun node:get/1, Cur).
 
-mod_neighbors(Pid, Start, End, F) ->
+mod_neighbors(Pid, Start, End, EdgeType, F) ->
     S = get_pid(Pid, Start),
     E = get_pid(Pid, End),
-    mod_neighbors(S, E, F).
+    mod_neighbors(S, E, EdgeType, F).
 
-mod_neighbors(no_such_node, _End, _F) ->
+mod_neighbors(no_such_node, _End, _EdgeType, _F) ->
     no_such_node();
-mod_neighbors(_Start, no_such_node, _F) ->
+mod_neighbors(_Start, no_such_node, _EdgeType, _F) ->
     no_such_node();
-mod_neighbors(S, E, F) ->
-    F(S, E).
+mod_neighbors(S, E, EdgeType, F) ->
+    F(S, E, EdgeType).

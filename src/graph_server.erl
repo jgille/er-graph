@@ -2,7 +2,8 @@
 %%% @copyright (C) 2012, Jon Ivmark
 %%% @doc
 %%%
-%%% A generic server module that should probably be removed in favour of some otp counter part.
+%%% A generic server module that should probably be removed in
+%%% favour of some otp counter part.
 %%%
 %%% @end
 %%% Created : 19 Oct 2012 by Jon Ivmark <jon@omega.avail.net>

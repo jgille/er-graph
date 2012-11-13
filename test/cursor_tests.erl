@@ -3,7 +3,8 @@
 -include_lib("eunit/include/eunit.hrl").
 
 -import(cursor, [from_list/1, as_list/1, as_list/2, for_each/2, for_each/3,
-                 filter/2, map/2, reduce/3, reduce/4, count/1, len/1, reverse/1, limit/2]).
+                 filter/2, map/2, reduce/3, reduce/4, count/1, len/1,
+                 reverse/1, limit/2]).
 
 as_list_test_() ->
     [fun() -> test_as_list([]) end,
@@ -36,7 +37,8 @@ map_test_() ->
     [fun() -> test_map([], Map) end,
      fun() -> test_map([1, 2], Map) end,
      fun() -> test_map([1, 2, 3, 4, 1], Map) end,
-     fun() -> ?assertError(badarith, as_list(map(Map, from_list(['A', 1])))) end].
+     fun() -> ?assertError(badarith,
+                           as_list(map(Map, from_list(['A', 1])))) end].
 
 filter_map_test_() ->
     Filter = fun(X) -> X > 2 end,
@@ -84,7 +86,10 @@ limit_test_() ->
     Filter = fun(X) -> X > 2 end,
     [fun() -> ?assertEqual([], as_list(limit(2, (from_list([]))))) end,
      fun() -> ?assertEqual([1, 2], as_list(limit(2, from_list([1, 2, 3])))) end,
-     fun() -> ?assertEqual([], as_list(limit(2, filter(Filter, from_list([1, 2, 3]))))) end].
+     fun() -> ?assertEqual([],
+                           as_list(limit(2,
+                                         filter(Filter,
+                                                from_list([1, 2, 3]))))) end].
 
 test_as_list(Xs) ->
     Xs1 = as_list(from_list(Xs)),
